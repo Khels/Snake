@@ -2,10 +2,14 @@ import tkinter as tk
 from random import randint
 
 
-HEIGHT = 600
-WIDTH = 600
-SEG_SIZE = 20
+HEIGHT = 570
+WIDTH = 570
+SEG_SIZE = 30
 IN_GAME = True
+# PAUSED: bool for pause
+# DIFFICULTY for root.after()
+# ADD A COMMENT TO EVERY CLASS, CLASS METHOD AND FUNCTION
+# ADD AN ABILITY TO KEEP RECORDS OF ALL GAMES VIA FILE SAVES
 
 
 def main():
@@ -29,12 +33,19 @@ def main():
             for i in range(len(snake.segments)-1):
                 if head == cnvs_field.coords(snake.segments[i].rect):
                     IN_GAME = False
+
         root.after(100, main)
+
     else:
-        cnvs_field.create_text(WIDTH/2, HEIGHT/2,
-                               text='HUMANITY IS DOOMED.',
+        cnvs_field.create_text(WIDTH/2, HEIGHT/2 - SEG_SIZE,
+                               text='HUMANITY IS DOOMED.\n'
+                                    'YOU CANNOT REDO.\n'
+                                    'OR CAN YOU?..',
+                               justify=tk.CENTER,
                                font='Arial 20',
                                fill='DarkOrange1')
+        # restart_button = tk.Button(root, text='restart')
+        restart_game()
 
 
 def spawn_core():
@@ -58,13 +69,18 @@ class Segment:
 class Snake:
 
     def __init__(self):
-        self.segments = [Segment(20, 280), Segment(40, 280)]
+        self.segments = [
+            Segment(SEG_SIZE, 9*SEG_SIZE),
+            Segment(2*SEG_SIZE, 9*SEG_SIZE),
+            Segment(3*SEG_SIZE, 9*SEG_SIZE)]
+
         self.mapping = {
             'Up': (0, -1),
             'Down': (0, 1),
             'Left': (-1, 0),
             'Right': (1, 0)
         }
+
         self.direction = self.mapping['Right']
 
     def move(self):
@@ -88,6 +104,28 @@ class Snake:
         self.segments.insert(0, Segment(back[0], back[1]))
 
 
+def start_game():
+    global snake
+    snake = Snake()
+    cnvs_field.bind('<KeyPress>', snake.change_direction)
+    spawn_core()
+    main()
+
+
+def clear_field():
+    cnvs_field.delete(CORE)
+    for segment in snake.segments:
+        cnvs_field.delete(segment.rect)
+
+
+# add event parameter
+def restart_game():
+    global IN_GAME
+    IN_GAME = True
+    clear_field()
+    start_game()
+
+
 root = tk.Tk()
 root.title('Evangelion: 4.0+Snake')
 
@@ -95,10 +133,6 @@ cnvs_field = tk.Canvas(root, height=HEIGHT, width=WIDTH, bg='black')
 cnvs_field.grid()
 cnvs_field.focus_set()
 
-snake = Snake()
-spawn_core()
-cnvs_field.bind('<KeyPress>', snake.change_direction)
-
-main()
+start_game()
 
 root.mainloop()
