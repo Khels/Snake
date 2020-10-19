@@ -6,7 +6,7 @@ HEIGHT = 570
 WIDTH = 570
 SEG_SIZE = 30
 IN_GAME = True
-# PAUSED: bool for pause
+PAUSED = False
 # DIFFICULTY for root.after()
 # ADD A COMMENT TO EVERY CLASS, CLASS METHOD AND FUNCTION
 # ADD AN ABILITY TO KEEP RECORDS OF ALL GAMES VIA FILE SAVES
@@ -16,36 +16,30 @@ def main():
     global IN_GAME
 
     if IN_GAME:
-        snake.move()
+        if not PAUSED:
+            snake.move()
 
-        head = cnvs_field.coords(snake.segments[-1].rect)
-        x1, y1, x2, y2 = head
+            head = cnvs_field.coords(snake.segments[-1].rect)
+            x1, y1, x2, y2 = head
 
-        if x1 < 0 or y1 < 0 or x2 > WIDTH or y2 > HEIGHT:
-            IN_GAME = False
+            if x1 < 0 or y1 < 0 or x2 > WIDTH or y2 > HEIGHT:
+                IN_GAME = False
 
-        elif head == cnvs_field.coords(CORE):
-            snake.eat()
-            cnvs_field.delete(CORE)
-            spawn_core()
+            elif head == cnvs_field.coords(CORE):
+                snake.eat()
+                cnvs_field.delete(CORE)
+                spawn_core()
 
-        else:
-            for i in range(len(snake.segments)-1):
-                if head == cnvs_field.coords(snake.segments[i].rect):
-                    IN_GAME = False
+            else:
+                for i in range(len(snake.segments)-1):
+                    if head == cnvs_field.coords(snake.segments[i].rect):
+                        IN_GAME = False
 
-        root.after(100, main)
+            root.after(100, main)
 
     else:
-        cnvs_field.create_text(WIDTH/2, HEIGHT/2 - SEG_SIZE,
-                               text='HUMANITY IS DOOMED.\n'
-                                    'YOU CANNOT REDO.\n'
-                                    'OR CAN YOU?..',
-                               justify=tk.CENTER,
-                               font='Arial 20',
-                               fill='DarkOrange1')
-        # restart_button = tk.Button(root, text='restart')
-        restart_game()
+        set_state(txt_game_over, 'normal')
+        set_state(txt_restart, 'normal')
 
 
 def spawn_core():
@@ -97,7 +91,16 @@ class Snake:
 
     def change_direction(self, event):
         if event.keysym in self.mapping:
-            self.direction = self.mapping[event.keysym]
+            if (self.direction == self.mapping['Up'] and
+               self.mapping[event.keysym] != self.mapping['Down'] or
+               self.direction == self.mapping['Down'] and
+               self.mapping[event.keysym] != self.mapping['Up'] or
+               self.direction == self.mapping['Left'] and
+               self.mapping[event.keysym] != self.mapping['Right'] or
+               self.direction == self.mapping['Right'] and
+               self.mapping[event.keysym] != self.mapping['Left']):
+
+                self.direction = self.mapping[event.keysym]
 
     def eat(self):
         back = cnvs_field.coords(self.segments[0].rect)
@@ -118,12 +121,28 @@ def clear_field():
         cnvs_field.delete(segment.rect)
 
 
-# add event parameter
-def restart_game():
+def restart_game(event):
     global IN_GAME
     IN_GAME = True
     clear_field()
+    set_state(txt_game_over, 'hidden')
+    set_state(txt_restart, 'hidden')
     start_game()
+
+
+def pause_game(event):
+    global PAUSED
+    if IN_GAME is True and PAUSED is False:
+        PAUSED = True
+        set_state(txt_pause, 'normal')
+    else:
+        PAUSED = False
+        set_state(txt_pause, 'hidden')
+        main()
+
+
+def set_state(item, state):
+    cnvs_field.itemconfigure(item, state=state)
 
 
 root = tk.Tk()
@@ -132,6 +151,40 @@ root.title('Evangelion: 4.0+Snake')
 cnvs_field = tk.Canvas(root, height=HEIGHT, width=WIDTH, bg='black')
 cnvs_field.grid()
 cnvs_field.focus_set()
+
+txt_game_over = cnvs_field.create_text(
+    WIDTH/2, HEIGHT/2 - SEG_SIZE,
+    text='HUMANITY IS DOOMED.\n'
+         'YOU CANNOT REDO.\n'
+         'OR CAN YOU?..',
+    justify=tk.CENTER,
+    font='Arial 20',
+    fill='DarkOrange1',
+    state='hidden'
+)
+
+txt_pause = cnvs_field.create_text(
+    WIDTH/2, HEIGHT/2 - SEG_SIZE,
+    text='YOU CAN REST FOR NOW\n'
+         'BUT YOU WILL NOT STOP\n'
+         'THE INEVITABLE.',
+    justify=tk.CENTER,
+    font='Arial 20',
+    fill='DarkOrange1',
+    state='hidden'
+)
+
+txt_restart = cnvs_field.create_text(
+    WIDTH/2, HEIGHT/2 + 2*SEG_SIZE,
+    text='REDO',
+    justify=tk.CENTER,
+    font='Arial 20',
+    fill='white',
+    state='hidden'
+)
+
+cnvs_field.tag_bind(txt_restart, "<Button-1>", restart_game)
+cnvs_field.bind("<Escape>", pause_game)
 
 start_game()
 
