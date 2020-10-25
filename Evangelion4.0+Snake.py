@@ -1,12 +1,17 @@
 import tkinter as tk
 from random import randint
 
-
+'''
 HEIGHT = 570
 WIDTH = 570
 SEG_SIZE = 30
+'''
+HEIGHT = 600
+WIDTH = 600
+SEG_SIZE = 100
 IN_GAME = True
 PAUSED = False
+FREE_SPACES = []
 # DIFFICULTY for root.after()
 # ADD A COMMENT TO EVERY CLASS, CLASS METHOD AND FUNCTION
 # ADD AN ABILITY TO KEEP RECORDS OF ALL GAMES VIA FILE SAVES
@@ -17,7 +22,9 @@ def main():
 
     if IN_GAME:
         if not PAUSED:
+            free_space = cnvs_field.coords(snake.segments[0].rect)
             snake.move()
+            change_free_spaces(free_space)
 
             head = cnvs_field.coords(snake.segments[-1].rect)
             x1, y1, x2, y2 = head
@@ -35,7 +42,7 @@ def main():
                     if head == cnvs_field.coords(snake.segments[i].rect):
                         IN_GAME = False
 
-            root.after(100, main)
+            root.after(200, main)
 
     else:
         set_state(txt_game_over, 'normal')
@@ -43,14 +50,20 @@ def main():
 
 
 def spawn_core():
-    global CORE
-    posx = SEG_SIZE * randint(1, (WIDTH-SEG_SIZE) / SEG_SIZE)
-    posy = SEG_SIZE * randint(1, (HEIGHT-SEG_SIZE) / SEG_SIZE)
-    CORE = cnvs_field.create_oval(posx, posy,
-                                  posx+SEG_SIZE,
-                                  posy+SEG_SIZE,
-                                  outline='red4',
-                                  fill='red2')
+    global CORE, FREE_SPACES, IN_GAME
+    if FREE_SPACES:
+        posx, posy = FREE_SPACES[randint(0, len(FREE_SPACES)-1)]
+        # posx = SEG_SIZE * randint(1, (WIDTH-SEG_SIZE) / SEG_SIZE)
+        # posy = SEG_SIZE * randint(1, (HEIGHT-SEG_SIZE) / SEG_SIZE)
+        CORE = cnvs_field.create_oval(posx, posy,
+                                      posx + SEG_SIZE,
+                                      posy + SEG_SIZE,
+                                      outline='red4',
+                                      fill='red2')
+    else:
+        IN_GAME = False
+        set_state(txt_victory, 'normal')
+        set_state(txt_restart, 'normal')
 
 
 class Segment:
@@ -62,11 +75,35 @@ class Segment:
 
 class Snake:
 
+# Segment(SEG_SIZE, SEG_SIZE),
+# Segment(2*SEG_SIZE, SEG_SIZE),
+# Segment(3*SEG_SIZE, SEG_SIZE),
+
     def __init__(self):
         self.segments = [
-            Segment(SEG_SIZE, 9*SEG_SIZE),
-            Segment(2*SEG_SIZE, 9*SEG_SIZE),
-            Segment(3*SEG_SIZE, 9*SEG_SIZE)]
+            Segment(0, SEG_SIZE),
+            Segment(SEG_SIZE, SEG_SIZE),
+            Segment(2*SEG_SIZE, SEG_SIZE),
+            Segment(3*SEG_SIZE, SEG_SIZE),
+            Segment(4*SEG_SIZE, SEG_SIZE),
+            Segment(4*SEG_SIZE, 2*SEG_SIZE),
+            Segment(3*SEG_SIZE, 2*SEG_SIZE),
+            Segment(2*SEG_SIZE, 2*SEG_SIZE),
+            Segment(SEG_SIZE, 2*SEG_SIZE),
+            Segment(0, 2*SEG_SIZE),
+            Segment(0, 3*SEG_SIZE),
+            Segment(SEG_SIZE, 3*SEG_SIZE),
+            Segment(2*SEG_SIZE, 3*SEG_SIZE),
+            Segment(3*SEG_SIZE, 3*SEG_SIZE),
+            Segment(4*SEG_SIZE, 3*SEG_SIZE),
+            Segment(4*SEG_SIZE, 4*SEG_SIZE),
+            Segment(3*SEG_SIZE, 4*SEG_SIZE),
+            Segment(2*SEG_SIZE, 4*SEG_SIZE),
+            Segment(SEG_SIZE, 4*SEG_SIZE),
+            Segment(0, 4*SEG_SIZE),
+            Segment(0, 5*SEG_SIZE),
+            Segment(SEG_SIZE, 5*SEG_SIZE),
+            Segment(2*SEG_SIZE, 5*SEG_SIZE)]
 
         self.mapping = {
             'Up': (0, -1),
@@ -108,8 +145,19 @@ class Snake:
 
 
 def start_game():
-    global snake
+    global FREE_SPACES, snake
+    FREE_SPACES.clear()
     snake = Snake()
+
+    for x in range(WIDTH // SEG_SIZE):
+        for y in range(HEIGHT // SEG_SIZE):
+            FREE_SPACES.append((x*SEG_SIZE, y*SEG_SIZE))
+
+    for segment in snake.segments:
+        occupied_space = cnvs_field.coords(segment.rect)
+        FREE_SPACES.remove((occupied_space[0], occupied_space[1]))
+    '''!!!Debugging messages!!!'''
+    print(f'Origin free_space({occupied_space[0]}, {occupied_space[1]}) was removed.')
     cnvs_field.bind('<KeyPress>', snake.change_direction)
     spawn_core()
     main()
@@ -127,6 +175,7 @@ def restart_game(event):
     clear_field()
     set_state(txt_game_over, 'hidden')
     set_state(txt_restart, 'hidden')
+    set_state(txt_victory, 'hidden')
     start_game()
 
 
@@ -139,6 +188,19 @@ def pause_game(event):
         PAUSED = False
         set_state(txt_pause, 'hidden')
         main()
+
+
+def change_free_spaces(free_space):
+    global FREE_SPACES, snake
+    for segment in snake.segments:
+        coords = cnvs_field.coords(segment.rect)
+        if (coords[0], coords[1]) in FREE_SPACES:
+            FREE_SPACES.remove((coords[0], coords[1]))
+            '''!!!Debugging messages!!!'''
+            print(f'({coords[0]}, {coords[1]}) was removed from FREE_SPACES.')
+    FREE_SPACES.append((free_space[0], free_space[1]))
+    '''!!!Debugging messages!!!'''
+    print(f'({free_space[0], free_space[1]}) was appended to FREE_SPACES.')
 
 
 def set_state(item, state):
@@ -180,6 +242,17 @@ txt_restart = cnvs_field.create_text(
     justify=tk.CENTER,
     font='Arial 20',
     fill='white',
+    state='hidden'
+)
+
+txt_victory = cnvs_field.create_text(
+    WIDTH/2, HEIGHT/2 - SEG_SIZE,
+    text='IMPOSSIBLE!\n'
+         'I AM INVINCIBLE\n'
+         'BUT STILL YOU DEFEATED ME?..',
+    justify=tk.CENTER,
+    font='Arial 20',
+    fill='DarkOrange1',
     state='hidden'
 )
 
