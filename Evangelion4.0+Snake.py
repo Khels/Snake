@@ -1,21 +1,17 @@
 import tkinter as tk
 from random import randint
 
-'''
+
 HEIGHT = 570
 WIDTH = 570
 SEG_SIZE = 30
-'''
-HEIGHT = 600
-WIDTH = 600
-SEG_SIZE = 100
 HEIGHT_MENU = HEIGHT
-WIDTH_MENU = 500
+WIDTH_MENU = 450
 IN_GAME = True
 PAUSED = False
 VICTORY = False
 FREE_SPACES = []
-DIFFICULTY = 250
+DIFFICULTY = 100
 
 
 def main():
@@ -67,7 +63,6 @@ def spawn_core():
     else:
         IN_GAME = False
         VICTORY = True
-        print('VICTORY!!!')
         set_state(txt_victory, 'normal')
 
 
@@ -80,35 +75,11 @@ class Segment:
 
 class Snake:
 
-    # Segment(SEG_SIZE, SEG_SIZE),
-    # Segment(2*SEG_SIZE, SEG_SIZE),
-    # Segment(3*SEG_SIZE, SEG_SIZE),
-
     def __init__(self):
         self.segments = [
-            Segment(0, SEG_SIZE),
             Segment(SEG_SIZE, SEG_SIZE),
             Segment(2*SEG_SIZE, SEG_SIZE),
-            Segment(3*SEG_SIZE, SEG_SIZE),
-            Segment(4*SEG_SIZE, SEG_SIZE),
-            Segment(4*SEG_SIZE, 2*SEG_SIZE),
-            Segment(3*SEG_SIZE, 2*SEG_SIZE),
-            Segment(2*SEG_SIZE, 2*SEG_SIZE),
-            Segment(SEG_SIZE, 2*SEG_SIZE),
-            Segment(0, 2*SEG_SIZE),
-            Segment(0, 3*SEG_SIZE),
-            Segment(SEG_SIZE, 3*SEG_SIZE),
-            Segment(2*SEG_SIZE, 3*SEG_SIZE),
-            Segment(3*SEG_SIZE, 3*SEG_SIZE),
-            Segment(4*SEG_SIZE, 3*SEG_SIZE),
-            Segment(4*SEG_SIZE, 4*SEG_SIZE),
-            Segment(3*SEG_SIZE, 4*SEG_SIZE),
-            Segment(2*SEG_SIZE, 4*SEG_SIZE),
-            Segment(SEG_SIZE, 4*SEG_SIZE),
-            Segment(0, 4*SEG_SIZE),
-            Segment(0, 5*SEG_SIZE),
-            Segment(SEG_SIZE, 5*SEG_SIZE),
-            Segment(2*SEG_SIZE, 5*SEG_SIZE)]
+            Segment(3*SEG_SIZE, SEG_SIZE)]
 
         self.mapping = {
             'Up': (0, -1),
@@ -203,17 +174,17 @@ def change_free_spaces():
 
 def pathetic(event):
     global DIFFICULTY
-    DIFFICULTY = 250
+    DIFFICULTY = 175
 
 
 def warrior(event):
     global DIFFICULTY
-    DIFFICULTY = 150
+    DIFFICULTY = 100
 
 
 def martyr(event):
     global DIFFICULTY
-    DIFFICULTY = 100
+    DIFFICULTY = 75
 
 
 def set_state(item, state):
@@ -281,7 +252,7 @@ txt_difficulty = menu.create_text(
 )
 
 txt_pathetic = menu.create_text(
-    SEG_SIZE, 60,
+    WIDTH_MENU/2, 60,
     text='pathetic',
     font='Arial 20',
     fill='white',
@@ -289,7 +260,7 @@ txt_pathetic = menu.create_text(
 )
 
 txt_warrior = menu.create_text(
-    SEG_SIZE, 90,
+    WIDTH_MENU/2, 90,
     text='warrior',
     font='Arial 20',
     fill='white',
@@ -297,7 +268,7 @@ txt_warrior = menu.create_text(
 )
 
 txt_martyr = menu.create_text(
-    SEG_SIZE, 120,
+    WIDTH_MENU/2, 120,
     text='martyr',
     font='Arial 20',
     fill='white',
